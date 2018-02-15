@@ -12,6 +12,10 @@ node('maven') {
     // Next line for inline script, "checkout scm" for Jenkinsfile from Gogs
     //git 'http://gogs-demo-mus-cicd.apps.2245.openshift.opentlc.com/mmusaji/kitchensink.git'
     checkout scm
+    sh("git config --global user.email 'mmusaji@redhat.com'")
+    sh("git config --global user.name 'Mustafa Musaji'")
+    sh("git tag -a 7.0.'${currentBuild.number}' -m 'Jenkins'")
+    sh('git push http://mmusaji:redhat@gogs-demo-mus-cicd.apps.2245.openshift.opentlc.com/mmusaji/kitchensink.git --tags')
   }
 
   // The following variables need to be defined at the top level and not inside
@@ -19,11 +23,12 @@ node('maven') {
   // Extract version and other properties from the pom.xml
   def groupId    = getGroupIdFromPom("pom.xml")
   def artifactId = getArtifactIdFromPom("pom.xml")
-  def version    = getVersionFromPom("pom.xml")
+  def version    = "7.0.'${currentBuild.number}"
 
   stage('Build war') {
     echo "Building version ${version}"
 
+    sh "${mvnCmd} versions:set -DnewVersion=7.0.'${currentBuild.number}'
     sh "${mvnCmd} clean package -DskipTests -Popenshift"
   }
   stage('Unit Tests') {
