@@ -23,7 +23,7 @@ node('maven') {
   // Extract version and other properties from the pom.xml
   def groupId    = getGroupIdFromPom("pom.xml")
   def artifactId = getArtifactIdFromPom("pom.xml")
-  def version    = "7.0.'${currentBuild.number}"
+  def version    = "7.0.'${currentBuild.number}'
 
   stage('Build war') {
     echo "Building version ${version}"
