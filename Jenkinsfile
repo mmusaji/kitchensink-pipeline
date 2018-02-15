@@ -89,7 +89,7 @@ node('maven') {
   }
 
   stage('Deploy to Staging'){
-    sh "oc project mus-kitchensink-staging"
+    sh "oc project mus-kitchensink-stage"
     sh "oc patch dc kitchensink --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"kitchensink\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"mus-kitchensink-dev\", \"name\": \"kitchensink:StagingCandidate-$version\"}}}]}}' -n mus-kitchensink-stage"
 
     openshiftDeploy depCfg: 'kitchensink', namespace: 'mus-kitchensink-stage', verbose: 'false', waitTime: '', waitUnit: 'sec'
