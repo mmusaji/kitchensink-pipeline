@@ -41,6 +41,7 @@ node('maven') {
     // Replace xyz-sonarqube with the name of your project
     //sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-mus-cicd.apps.2245.openshift.opentlc.com/ -Dsonar.projectName=${JOB_BASE_NAME}"
   }
+
   stage('Publish to Nexus') {
     echo "Publish to Nexus"
 
@@ -79,10 +80,28 @@ node('maven') {
     // TBD: Proper test
     // Could use the OpenShift-Tasks REST APIs to make sure it is working as expected.
 
-    def newTag = "ProdReady-${version}"
+    //def newTag = "ProdReady-${version}"
+    def newTag = "StagingCandidate-${version}"
     echo "New Tag: ${newTag}"
 
     // Replace xyz-tasks-dev with the name of your dev project
+    openshiftTag alias: 'false', destStream: 'kitchensink', destTag: newTag, destinationNamespace: 'mus-kitchensink-dev', namespace: 'mus-kitchensink-dev', srcStream: 'kitchensink', srcTag: 'latest', verbose: 'false'
+  }
+
+  stage('Deploy to Staging'){
+    sh "oc project mus-kitchensink-staging"
+    sh "oc patch dc kitchensink --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"kitchensink\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"mus-kitchensink-dev\", \"name\": \"kitchensink:StagingCandidate-$version\"}}}]}}' -n mus-kitchensink-stage"
+
+    openshiftDeploy depCfg: 'kitchensink', namespace: 'mus-kitchensink-stage', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'kitchensink', namespace: 'mus-kitchensink-stage', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'mus-kitchensink-stage', svcName: 'kitchensink', verbose: 'false'
+
+  }
+
+  stage('Build Prod Tag'){
+    def newTag = "ProdReady-${version}"
+    echo "New Tag: ${newTag}"
+
     openshiftTag alias: 'false', destStream: 'kitchensink', destTag: newTag, destinationNamespace: 'mus-kitchensink-dev', namespace: 'mus-kitchensink-dev', srcStream: 'kitchensink', srcTag: 'latest', verbose: 'false'
   }
 
