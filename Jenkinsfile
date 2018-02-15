@@ -28,7 +28,7 @@ node('maven') {
   stage('Build war') {
     echo "Building version ${version}"
 
-    sh "${mvnCmd} versions:set -DnewVersion=7.0.'${currentBuild.number}'
+    sh "${mvnCmd} versions:set -DnewVersion=7.0.'${currentBuild.number}'"
     sh "${mvnCmd} clean package -DskipTests -Popenshift"
   }
   stage('Unit Tests') {
